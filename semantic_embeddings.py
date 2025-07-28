@@ -219,12 +219,15 @@ class SemanticEmbeddings:
             consolidation_score = (decay_factor * 0.6 + usage_score * 0.4)
             
             # Update metadata
-            embedding_data["metadata"]["temporal_weight"] = decay_factor
-            embedding_data["metadata"]["memory_consolidation_score"] = consolidation_score
+            embedding_data["metadata"]["temporal_weight"] = float(decay_factor)
+            embedding_data["metadata"]["memory_consolidation_score"] = float(consolidation_score)
             
-            # Update in Redis
+            # Update in Redis (remove numpy array before JSON serialization)
             redis_key = f"embedding:{embedding_id}"
-            r.set(redis_key, json.dumps(embedding_data))
+            # Create a copy without the numpy array for JSON serialization
+            json_safe_data = embedding_data.copy()
+            json_safe_data["embedding"] = self.encode_embedding_for_redis(embedding_data["embedding"])
+            r.set(redis_key, json.dumps(json_safe_data))
     
     def _update_hierarchical_clustering(self, user_id: str):
         """Update hierarchical semantic clustering."""
@@ -255,9 +258,12 @@ class SemanticEmbeddings:
         for i, embedding_data in enumerate(user_embeddings):
             embedding_data["metadata"]["hierarchical_cluster"] = int(cluster_labels[i])
             
-            # Update in Redis
+            # Update in Redis (remove numpy array before JSON serialization)
             redis_key = f"embedding:{embedding_data['embedding_id']}"
-            r.set(redis_key, json.dumps(embedding_data))
+            # Create a copy without the numpy array for JSON serialization
+            json_safe_data = embedding_data.copy()
+            json_safe_data["embedding"] = self.encode_embedding_for_redis(embedding_data["embedding"])
+            r.set(redis_key, json.dumps(json_safe_data))
     
     def get_conversation_embedding(self, embedding_id: str) -> Optional[Dict]:
         """
