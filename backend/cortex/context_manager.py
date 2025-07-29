@@ -1,6 +1,16 @@
+#!/usr/bin/env python3
+"""
+🧠 Cortex Context Manager
+Manages context-aware response generation with multiple strategies.
+"""
+
 import json
-from typing import List, Dict, Optional
-from redis_client import r
+from typing import List, Dict, Optional, Tuple
+from datetime import datetime
+from .redis_client import r
+from .gemini_api import call_gemini_api
+from .semantic_embeddings import semantic_embeddings
+from .self_evolving_context import self_evolving_context
 
 def search_traces(user_id: Optional[str] = None, limit: int = 10) -> List[Dict]:
     """
@@ -41,8 +51,6 @@ def fetch_context(user_id: str, current_prompt: str, limit: int = 5) -> str:
         Formatted context string from relevant past traces
     """
     try:
-        from semantic_embeddings import semantic_embeddings
-        
         # Use semantic context search for better relevance
         context = semantic_embeddings.semantic_context_search(
             user_id, current_prompt, limit=limit, similarity_threshold=0.3
@@ -100,8 +108,7 @@ def generate_with_context(prompt: str, user_id: str) -> str:
     Returns:
         Generated response from Gemini with context
     """
-    from gemini_api import call_gemini_api
-    from core import log_gemini
+    from .core import store_conversation
     
     # Fetch relevant context
     context = fetch_context(user_id, prompt)
@@ -121,7 +128,7 @@ def generate_with_context(prompt: str, user_id: str) -> str:
         "has_context": bool(context),
         "context_length": len(context)
     }
-    log_gemini(prompt, response, metadata)
+    store_conversation(user_id, prompt, response, metadata)
     
     return response
 
@@ -136,14 +143,11 @@ def generate_with_evolving_context(prompt: str, user_id: str) -> str:
     Returns:
         Generated response
     """
-    from gemini_api import call_gemini_api
-    from core import log_gemini
-    from semantic_embeddings import semantic_embeddings
-    from self_evolving_context import self_evolving_context
+    from .core import store_conversation
     
     try:
         # Get evolving context
-        similar_contexts = semantic_embeddings.find_evolving_semantic_context(
+        similar_contexts = semantic_embeddings.find_semantically_similar_context(
             user_id, prompt, limit=3, similarity_threshold=0.25
         )
         
@@ -184,7 +188,7 @@ def generate_with_evolving_context(prompt: str, user_id: str) -> str:
             "context_system": "self_evolving",
             "trace_ids": trace_ids
         }
-        log_gemini(prompt, response, metadata)
+        store_conversation(user_id, prompt, response, metadata)
         
         return response
         

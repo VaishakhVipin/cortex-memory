@@ -1,17 +1,19 @@
+#!/usr/bin/env python3
 """
-Semantic Drift Detection Module
-
-This module provides comprehensive drift detection capabilities for the PMT Protocol,
-monitoring system performance changes, user behavior shifts, and context relevance
-degradation over time using ML-enhanced algorithms.
+🧠 Cortex Semantic Drift Detection
+Monitors system performance and detects behavioral changes over time.
 """
 
 import json
 import time
+import statistics
+import math
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional, Any
 import numpy as np
-from typing import Dict, List
-from datetime import datetime
-from redis_client import r
+from collections import defaultdict
+from .redis_client import r
+from .semantic_embeddings import semantic_embeddings
 
 # Machine Learning imports
 try:

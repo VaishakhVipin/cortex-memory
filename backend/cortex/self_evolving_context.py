@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 """
-🧠 Self-Evolving Context Model - Phase 1 Implementation
-Builds on semantic context provision to create adaptive, learning context system.
-
-Phase 1 Components:
-- Context Scoring Engine
-- Recall Tracking System  
-- Basic Adaptive Weighting
-- Metrics Collection
+🧠 Cortex Self-Evolving Context Model
+Advanced adaptive learning system that optimizes context relevance over time.
 """
 
 import json
 import time
-import numpy as np
-from typing import List, Dict, Optional, Tuple
-from redis_client import r
-from semantic_embeddings import semantic_embeddings
-from datetime import datetime
-from semantic_drift_detection import SemanticDriftDetection
-import re
 import math
+import statistics
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional, Any
+import numpy as np
+from collections import defaultdict, Counter
+import re
+from .redis_client import r
+from .semantic_embeddings import semantic_embeddings
+from .semantic_drift_detection import SemanticDriftDetection
 
 # Machine Learning imports
 try:

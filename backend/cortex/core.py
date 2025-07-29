@@ -10,8 +10,8 @@ import time
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from redis_client import r
-from semantic_embeddings import semantic_embeddings
+from .redis_client import r
+from .semantic_embeddings import semantic_embeddings
 
 def store_conversation(user_id: str, prompt: str, response: str, 
                       metadata: Optional[Dict] = None) -> str:

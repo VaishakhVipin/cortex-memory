@@ -1,8 +1,8 @@
-# 🧠 PMT Protocol - Project Summary
+# 🧠 Cortex - Project Summary
 
 ## 🎯 Current State: Enterprise-Ready Semantic Context System
 
-PMT Protocol has evolved from a basic context-aware system into a **12/12 enterprise-grade semantic context layer** that leading AI companies can adopt for commercialization.
+Cortex has evolved from a basic context-aware system into a **12/12 enterprise-grade semantic context layer** that leading AI companies can adopt for commercialization.
 
 ## 🏗️ Architecture Overview
 
@@ -170,7 +170,7 @@ PMT Protocol has evolved from a basic context-aware system into a **12/12 enterp
 
 ## 🎉 Conclusion
 
-PMT Protocol has successfully evolved from a basic context-aware system into a **12/12 enterprise-grade semantic context layer**. The base semantic context provision is complete and production-ready, with comprehensive documentation for the next evolution phase.
+Cortex has successfully evolved from a basic context-aware system into a **12/12 enterprise-grade semantic context layer**. The base semantic context provision is complete and production-ready, with comprehensive documentation for the next evolution phase.
 
 **The system is now ready for:**
 - ✅ Enterprise adoption
@@ -182,4 +182,4 @@ PMT Protocol has successfully evolved from a basic context-aware system into a *
 
 ---
 
-**PMT Protocol: The first truly self-optimizing semantic context system for LLMs.** 🚀
+**Cortex: The first truly self-optimizing semantic context system for LLMs.** 🚀

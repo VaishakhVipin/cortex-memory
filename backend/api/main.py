@@ -1,21 +1,45 @@
 #!/usr/bin/env python3
 """
-🧠 Cortex API - Enterprise-Grade Context-Aware AI System
-RESTful API for semantic context management and self-evolving memory.
+🧠 Cortex API Server
+FastAPI server for the Cortex memory management system.
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import json
 from datetime import datetime
 
-from semantic_embeddings import semantic_embeddings
-from self_evolving_context import self_evolving_context
-from semantic_drift_detection import detect_semantic_drift
-from context_manager import generate_with_context, generate_with_evolving_context
+# Import Cortex SDK
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-app = FastAPI(title="Cortex API", version="2.0.0")
+from cortex import (
+    semantic_embeddings,
+    self_evolving_context,
+    detect_semantic_drift,
+    generate_with_context,
+    generate_with_evolving_context
+)
+
+app = FastAPI(
+    title="Cortex API",
+    description="Enterprise-Grade Context-Aware AI System API",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS middleware for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Request/Response Models
 class ConversationRequest(BaseModel):
@@ -272,7 +296,7 @@ async def health_check():
     """System health check."""
     try:
         # Test Redis connection
-        from redis_client import r
+        from cortex.redis_client import r
         r.ping()
         
         return {
@@ -291,7 +315,7 @@ async def health_check():
 async def get_system_stats():
     """Get system-wide statistics."""
     try:
-        from redis_client import r
+        from cortex.redis_client import r
         
         # Get basic Redis stats
         redis_info = r.info()

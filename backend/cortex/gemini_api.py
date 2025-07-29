@@ -1,6 +1,6 @@
 import os
 import requests
-from config import GEMINI_API_KEY
+from .config import GEMINI_API_KEY
 
 def call_gemini_api(prompt_text: str, max_tokens: int = 512) -> str:
     """
@@ -28,4 +28,4 @@ def call_gemini_api(prompt_text: str, max_tokens: int = 512) -> str:
         return data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
     except requests.exceptions.RequestException as e:
         print(f"❌ Gemini API error: {e}")
-        return f"Error calling Gemini API: {e}" 
+        return f"Error calling Gemini API: {e}"

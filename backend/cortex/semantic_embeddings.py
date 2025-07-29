@@ -1,8 +1,14 @@
+#!/usr/bin/env python3
+"""
+🧠 Cortex Semantic Embeddings - Advanced semantic understanding system
+Handles embedding generation, storage, and similarity search for context retrieval.
+"""
+
 import json
 import numpy as np
 from typing import List, Dict, Optional, Tuple
 from sklearn.metrics.pairwise import cosine_similarity
-from redis_client import r
+from .redis_client import r
 import pickle
 import base64
 import time
@@ -810,7 +816,7 @@ def find_evolving_semantic_context(self, user_id: str, current_prompt: str,
         List of tuples (embedding_data, enhanced_similarity)
     """
     # Use self-evolving context system
-    from self_evolving_context import self_evolving_context
+    from backend.cortex.self_evolving_context import self_evolving_context
     
     return self_evolving_context.find_evolving_context(
         user_id, current_prompt, limit, similarity_threshold

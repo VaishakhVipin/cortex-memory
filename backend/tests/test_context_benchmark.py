@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-🧠 Context-Aware vs No-Context Benchmark Test
-Comprehensive test comparing context-aware responses vs baseline.
-
-This test:
-1. Stores diverse conversation history
-2. Tests queries with and without context
-3. Measures performance and quality
-4. Shows real-world impact of context awareness
+🧠 Cortex Context Benchmark Test
+Comprehensive benchmark testing for context-aware vs no-context responses.
 """
 
-import json
 import time
+import json
+import sys
+import os
+from typing import List, Dict, Tuple
 from datetime import datetime
-from redis_client import r
-from semantic_embeddings import semantic_embeddings
-from self_evolving_context import self_evolving_context
-from context_manager import generate_with_context, generate_with_evolving_context
-from gemini_api import call_gemini_api
-from typing import Dict, List, Tuple
+
+# Add parent directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from cortex.redis_client import r
+from cortex.gemini_api import call_gemini_api
+from cortex.semantic_embeddings import semantic_embeddings
+from cortex.self_evolving_context import self_evolving_context
+from cortex.context_manager import generate_with_context, generate_with_evolving_context
 import re
 
 def clear_redis():
