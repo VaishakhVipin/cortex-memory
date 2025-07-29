@@ -6,6 +6,7 @@ from redis_client import r
 import pickle
 import base64
 import time
+import hashlib
 
 # Try to import sentence-transformers, fallback to mock if not available
 try:
@@ -19,6 +20,7 @@ class SemanticEmbeddings:
     """
     Semantic embeddings manager for context-aware AI.
     Uses sentence-transformers to generate embeddings and stores them in Redis.
+    Optimized for performance with batch processing and caching.
     """
     
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
@@ -35,20 +37,33 @@ class SemanticEmbeddings:
             self.use_mock = True
         else:
             try:
+                print(f"🧠 Loading semantic model: {model_name}...")
+                start_time = time.time()
                 self.model = SentenceTransformer(model_name)
+                load_time = time.time() - start_time
                 self.model_name = model_name
                 self.use_mock = False
-                print(f"🧠 Loaded semantic model: {model_name}")
+                print(f"✅ Loaded semantic model in {load_time:.2f}s")
+                
+                # Enable model optimization
+                if hasattr(self.model, 'max_seq_length'):
+                    self.model.max_seq_length = 256  # Reduce for faster processing
+                
             except Exception as e:
                 print(f"⚠️ Failed to load sentence-transformers model: {e}")
                 print("🔄 Falling back to mock semantic embeddings")
                 self.model = None
                 self.model_name = "mock-embeddings"
                 self.use_mock = True
+        
+        # Performance optimizations
+        self.embedding_cache = {}  # Simple in-memory cache
+        self.cache_size_limit = 1000
+        self.batch_size = 32  # Process multiple texts at once
     
     def generate_embedding(self, text: str) -> np.ndarray:
         """
-        Generate embedding for a given text.
+        Generate embedding for a given text with caching.
         
         Args:
             text: Text to generate embedding for
@@ -56,18 +71,74 @@ class SemanticEmbeddings:
         Returns:
             numpy array of the embedding
         """
+        # Check cache first
+        text_hash = hashlib.md5(text.encode()).hexdigest()
+        if text_hash in self.embedding_cache:
+            return self.embedding_cache[text_hash]
+        
         if self.use_mock:
             # Generate mock embedding using hash
-            import hashlib
-            text_hash = hashlib.md5(text.encode()).hexdigest()
-            # Convert hash to numpy array (384 dimensions like all-MiniLM-L6-v2)
             embedding = np.zeros(384)
             for i, char in enumerate(text_hash):
                 if i < 384:
                     embedding[i] = ord(char) / 255.0
-            return embedding
         else:
-            return self.model.encode(text, convert_to_numpy=True)
+            # Truncate text if too long for performance
+            if len(text) > 500:
+                text = text[:500] + "..."
+            
+            # Generate embedding
+            embedding = self.model.encode(text, convert_to_numpy=True)
+        
+        # Cache the result
+        if len(self.embedding_cache) < self.cache_size_limit:
+            self.embedding_cache[text_hash] = embedding
+        
+        return embedding
+    
+    def generate_embeddings_batch(self, texts: List[str]) -> List[np.ndarray]:
+        """
+        Generate embeddings for multiple texts efficiently using batch processing.
+        
+        Args:
+            texts: List of texts to generate embeddings for
+            
+        Returns:
+            List of numpy arrays
+        """
+        if not texts:
+            return []
+        
+        if self.use_mock:
+            # Generate mock embeddings for batch
+            embeddings = []
+            for text in texts:
+                text_hash = hashlib.md5(text.encode()).hexdigest()
+                embedding = np.zeros(384)
+                for i, char in enumerate(text_hash):
+                    if i < 384:
+                        embedding[i] = ord(char) / 255.0
+                embeddings.append(embedding)
+            return embeddings
+        
+        # Truncate texts for performance
+        truncated_texts = []
+        for text in texts:
+            if len(text) > 500:
+                truncated_texts.append(text[:500] + "...")
+            else:
+                truncated_texts.append(text)
+        
+        # Generate embeddings in batch
+        embeddings = self.model.encode(truncated_texts, convert_to_numpy=True)
+        
+        # Cache individual embeddings
+        for i, text in enumerate(texts):
+            text_hash = hashlib.md5(text.encode()).hexdigest()
+            if len(self.embedding_cache) < self.cache_size_limit:
+                self.embedding_cache[text_hash] = embeddings[i]
+        
+        return embeddings
     
     def encode_embedding_for_redis(self, embedding: np.ndarray) -> str:
         """
@@ -94,7 +165,7 @@ class SemanticEmbeddings:
         return pickle.loads(base64.b64decode(encoded_embedding.encode('utf-8')))
     
     def store_conversation_embedding(self, user_id: str, prompt: str, response: str, 
-                                   metadata: Dict = None) -> str:
+                                   metadata: Dict = None, skip_background_processing: bool = True) -> str:
         """
         Store conversation embedding in Redis with enterprise-grade features.
         
@@ -103,6 +174,7 @@ class SemanticEmbeddings:
             prompt: User prompt
             response: AI response
             metadata: Additional metadata
+            skip_background_processing: Skip expensive background operations for speed
             
         Returns:
             Embedding ID
@@ -146,28 +218,135 @@ class SemanticEmbeddings:
         # Store in Redis with multiple keys for different access patterns
         redis_key = f"embedding:{embedding_id}"
         user_embeddings_key = f"user_embeddings:{user_id}"
-        temporal_key = f"temporal:{user_id}"
-        cluster_key = f"clusters:{user_id}"
         
-        # Store full embedding data
+        # Store the embedding data
         r.set(redis_key, json.dumps(embedding_data))
         
         # Add to user's embedding list
         r.lpush(user_embeddings_key, embedding_id)
         
-        # Add to temporal index for decay calculations
-        r.zadd(temporal_key, {embedding_id: time.time()})
+        # Set TTL for automatic cleanup (30 days)
+        r.expire(redis_key, 30 * 24 * 3600)
+        r.expire(user_embeddings_key, 30 * 24 * 3600)
         
-        # Set TTL for user embeddings (30 days)
-        r.expire(user_embeddings_key, 30 * 24 * 60 * 60)
-        r.expire(temporal_key, 30 * 24 * 60 * 60)
-        
-        # Trigger memory consolidation and clustering
-        self._update_memory_consolidation(user_id)
-        self._update_hierarchical_clustering(user_id)
+        # Update memory consolidation and clustering (async-like) - skip for speed
+        if not skip_background_processing:
+            try:
+                self._update_memory_consolidation(user_id)
+                self._update_hierarchical_clustering(user_id)
+            except Exception as e:
+                print(f"⚠️ Background processing failed: {e}")
         
         print(f"📦 Stored enterprise semantic embedding: {embedding_id}")
         return embedding_id
+    
+    def run_background_processing(self, user_id: str):
+        """
+        Run expensive background processing operations for a user.
+        This can be called separately when needed, not during fast batch operations.
+        
+        Args:
+            user_id: User identifier
+        """
+        print(f"🔄 Running background processing for user: {user_id}")
+        try:
+            self._update_memory_consolidation(user_id)
+            self._update_hierarchical_clustering(user_id)
+            print(f"✅ Background processing completed for user: {user_id}")
+        except Exception as e:
+            print(f"⚠️ Background processing failed for {user_id}: {e}")
+    
+    def store_conversations_batch(self, conversations: List[Dict], skip_background_processing: bool = True) -> List[str]:
+        """
+        Store multiple conversations efficiently using batch processing.
+        
+        Args:
+            conversations: List of dicts with keys: user_id, prompt, response, metadata
+            skip_background_processing: Skip expensive background operations for speed
+            
+        Returns:
+            List of embedding IDs
+        """
+        if not conversations:
+            return []
+        
+        print(f"🚀 Batch processing {len(conversations)} conversations...")
+        start_time = time.time()
+        
+        # Prepare conversation texts for batch embedding generation
+        conversation_texts = []
+        for conv in conversations:
+            conversation_text = f"User: {conv['prompt']}\nAssistant: {conv['response']}"
+            conversation_texts.append(conversation_text)
+        
+        # Generate embeddings in batch
+        embeddings = self.generate_embeddings_batch(conversation_texts)
+        
+        # Process each conversation
+        embedding_ids = []
+        import uuid
+        
+        for i, conv in enumerate(conversations):
+            # Create embedding ID
+            embedding_id = str(uuid.uuid4())
+            
+            # Enhanced metadata
+            conversation_text = conversation_texts[i]
+            enhanced_metadata = {
+                "conversation_length": len(conversation_text),
+                "prompt_complexity": self._calculate_complexity(conv['prompt']),
+                "response_quality": self._calculate_response_quality(conv['response']),
+                "semantic_density": self._calculate_semantic_density(conversation_text),
+                "temporal_weight": 1.0,
+                "memory_consolidation_score": 0.0,
+                "precision_score": 0.0,
+                "recall_score": 0.0,
+                "hierarchical_cluster": None,
+                **(conv.get('metadata') or {})
+            }
+            
+            # Prepare data for Redis
+            embedding_data = {
+                "embedding_id": embedding_id,
+                "user_id": conv['user_id'],
+                "prompt": conv['prompt'],
+                "response": conv['response'],
+                "conversation_text": conversation_text,
+                "embedding": self.encode_embedding_for_redis(embeddings[i]),
+                "metadata": enhanced_metadata,
+                "model_name": self.model_name,
+                "timestamp": str(np.datetime64('now')),
+                "created_at": time.time()
+            }
+            
+            # Store in Redis
+            redis_key = f"embedding:{embedding_id}"
+            user_embeddings_key = f"user_embeddings:{conv['user_id']}"
+            
+            r.set(redis_key, json.dumps(embedding_data))
+            r.lpush(user_embeddings_key, embedding_id)
+            r.expire(redis_key, 30 * 24 * 3600)
+            r.expire(user_embeddings_key, 30 * 24 * 3600)
+            
+            embedding_ids.append(embedding_id)
+        
+        # Skip expensive background processing for speed
+        if not skip_background_processing:
+            # Update memory consolidation and clustering for all users (expensive operations)
+            user_ids = list(set(conv['user_id'] for conv in conversations))
+            for user_id in user_ids:
+                try:
+                    self._update_memory_consolidation(user_id)
+                    self._update_hierarchical_clustering(user_id)
+                except Exception as e:
+                    print(f"⚠️ Background processing failed for {user_id}: {e}")
+        else:
+            print("⚡ Skipping background processing for speed")
+        
+        processing_time = time.time() - start_time
+        print(f"✅ Batch processed {len(conversations)} conversations in {processing_time:.2f}s ({processing_time/len(conversations):.3f}s per conversation)")
+        
+        return embedding_ids
     
     def _calculate_complexity(self, text: str) -> float:
         """Calculate text complexity score."""
@@ -289,25 +468,45 @@ class SemanticEmbeddings:
     
     def get_user_embeddings(self, user_id: str, limit: int = 50) -> List[Dict]:
         """
-        Get all embeddings for a user.
-        
-        Args:
-            user_id: User identifier
-            limit: Maximum number of embeddings to retrieve
-            
-        Returns:
-            List of embedding data
+        Get user embeddings using optimized Redis pipelining for speed.
         """
-        user_embeddings_key = f"user_embeddings:{user_id}"
-        embedding_ids = r.lrange(user_embeddings_key, 0, limit - 1)
-        
-        embeddings = []
-        for embedding_id in embedding_ids:
-            embedding_data = self.get_conversation_embedding(embedding_id)
-            if embedding_data:
-                embeddings.append(embedding_data)
-        
-        return embeddings
+        try:
+            # Get embedding IDs for user using pipelining
+            pipe = r.pipeline()
+            pipe.lrange(f"user_embeddings:{user_id}", 0, limit - 1)
+            embedding_ids = pipe.execute()[0]
+            
+            if not embedding_ids:
+                return []
+            
+            # Batch get all embeddings using pipelining
+            pipe = r.pipeline()
+            for embedding_id in embedding_ids:
+                pipe.get(f"embedding:{embedding_id}")
+            
+            embedding_data_list = pipe.execute()
+            
+            # Process results
+            embeddings = []
+            for i, embedding_data in enumerate(embedding_data_list):
+                if embedding_data:
+                    try:
+                        data = json.loads(embedding_data)
+                        data['embedding_id'] = embedding_ids[i]
+                        
+                        # Decode embedding from string to numpy array
+                        if isinstance(data.get('embedding'), str):
+                            data['embedding'] = self.decode_embedding_from_redis(data['embedding'])
+                        
+                        embeddings.append(data)
+                    except json.JSONDecodeError:
+                        continue
+            
+            return embeddings
+            
+        except Exception as e:
+            print(f"⚠️ Error getting user embeddings: {e}")
+            return []
     
     def calculate_semantic_similarity(self, embedding1: np.ndarray, 
                                     embedding2: np.ndarray) -> float:
@@ -331,67 +530,71 @@ class SemanticEmbeddings:
     def find_semantically_similar_context(self, user_id: str, current_prompt: str, 
                                         limit: int = 5, similarity_threshold: float = 0.3) -> List[Tuple[Dict, float]]:
         """
-        Find semantically similar context with enterprise-grade precision.
-        
-        Args:
-            user_id: User identifier
-            current_prompt: Current prompt to find context for
-            limit: Maximum number of similar contexts to return
-            similarity_threshold: Minimum similarity score (0-1)
-            
-        Returns:
-            List of tuples (embedding_data, similarity_score)
+        Find semantically similar context using optimized search.
+        Much faster than previous version.
         """
-        # Generate embedding for current prompt
-        current_embedding = self.generate_embedding(current_prompt)
-        
-        # Get user's conversation embeddings
-        user_embeddings = self.get_user_embeddings(user_id, limit=100)
-        
-        # Update memory consolidation before search
-        self._update_memory_consolidation(user_id)
-        
-        # Calculate enhanced similarities with multiple factors
-        similarities = []
-        for embedding_data in user_embeddings:
-            stored_embedding = embedding_data["embedding"]
-            base_similarity = self.calculate_semantic_similarity(current_embedding, stored_embedding)
+        try:
+            # Get user embeddings (limit to recent 20 for speed)
+            user_embeddings = self.get_user_embeddings(user_id, limit=20)
             
-            # Apply enterprise-grade enhancements
+            if not user_embeddings:
+                return []
+            
+            # Generate embedding for current prompt
+            current_embedding = self.generate_embedding(current_prompt)
+            
+            # Fast similarity calculation
+            similarities = []
+            for embedding_data in user_embeddings:
+                try:
+                    # Embedding is already decoded by get_conversation_embedding
+                    stored_embedding = embedding_data["embedding"]
+                    
+                    # Calculate base similarity
+                    base_similarity = self.calculate_semantic_similarity(current_embedding, stored_embedding)
+                    
+                    # Quick enhancement (no expensive operations)
+                    enhanced_similarity = self._calculate_quick_similarity(
+                        embedding_data, base_similarity, current_prompt
+                    )
+                    
+                    # Lower threshold for better context finding
+                    if enhanced_similarity >= similarity_threshold * 0.5:  # More lenient threshold
+                        similarities.append((embedding_data, enhanced_similarity))
+                        
+                except Exception as e:
+                    continue
+            
+            # Sort by similarity and return top results
+            similarities.sort(key=lambda x: x[1], reverse=True)
+            return similarities[:limit]
+            
+        except Exception as e:
+            print(f"⚠️ Semantic context search failed: {e}")
+            return []
+    
+    def _calculate_quick_similarity(self, embedding_data: Dict, base_similarity: float, current_prompt: str) -> float:
+        """
+        Calculate enhanced similarity quickly without expensive operations.
+        """
+        try:
             metadata = embedding_data.get("metadata", {})
             
-            # Temporal weight (recent memories weighted higher)
+            # Get basic enhancement factors
             temporal_weight = metadata.get("temporal_weight", 1.0)
-            
-            # Memory consolidation score
-            consolidation_score = metadata.get("memory_consolidation_score", 0.5)
-            
-            # Response quality boost
             quality_boost = metadata.get("response_quality", 0.5)
             
-            # Semantic density boost
-            density_boost = metadata.get("semantic_density", 0.5)
-            
-            # Calculate enhanced similarity
+            # Calculate enhanced similarity (simplified)
             enhanced_similarity = (
-                base_similarity * 0.5 +
-                temporal_weight * 0.2 +
-                consolidation_score * 0.15 +
-                quality_boost * 0.1 +
-                density_boost * 0.05
+                base_similarity * 0.8 +
+                temporal_weight * 0.1 +
+                quality_boost * 0.1
             )
             
-            if enhanced_similarity >= similarity_threshold:
-                similarities.append((embedding_data, enhanced_similarity))
-                
-                # Track usage for consolidation
-                embedding_id = embedding_data["embedding_id"]
-                current_usage = r.get(f"usage:{embedding_id}") or 0
-                r.set(f"usage:{embedding_id}", int(current_usage) + 1)
-        
-        # Sort by enhanced similarity (highest first) and return top results
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:limit]
+            return max(0.0, min(1.0, enhanced_similarity))
+            
+        except Exception:
+            return base_similarity
     
     def semantic_context_search(self, user_id: str, current_prompt: str, 
                               limit: int = 5, similarity_threshold: float = 0.3) -> str:

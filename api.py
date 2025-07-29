@@ -92,6 +92,22 @@ class DriftSummaryResponse(BaseModel):
     alerts_count: int
     last_updated: float
 
+# New Pydantic models for ML functionality
+class MLTrainingRequest(BaseModel):
+    user_id: str
+
+class MLTrainingResponse(BaseModel):
+    status: str
+    message: str
+    training_data_count: Optional[int] = None
+    model_performance: Optional[Dict] = None
+
+class MLStatusResponse(BaseModel):
+    ml_available: bool
+    models_trained: bool
+    training_data_count: int
+    model_performance: Dict
+
 @app.post("/generate", response_model=GenerateResponse)
 async def generate_response(request: GenerateRequest):
     """Generate a response with semantic context."""
@@ -223,6 +239,41 @@ async def configure_drift_detection(component: str, enabled: bool = True):
         return {"message": f"Drift component '{component}' {'enabled' if enabled else 'disabled'}"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Configuration failed: {str(e)}")
+
+@app.post("/ml/train", response_model=MLTrainingResponse)
+async def train_ml_models(request: MLTrainingRequest):
+    """Train ML models for a user."""
+    try:
+        result = self_evolving_context.train_ml_models(request.user_id)
+        
+        # Get additional status info
+        status = self_evolving_context.get_ml_model_status(request.user_id)
+        
+        return MLTrainingResponse(
+            status=result.get("status", "error"),
+            message=result.get("message", "Unknown error"),
+            training_data_count=status.get("training_data_count", 0),
+            model_performance=status.get("model_performance", {})
+        )
+    except Exception as e:
+        return MLTrainingResponse(
+            status="error",
+            message=f"Training failed: {str(e)}"
+        )
+
+@app.get("/ml/status/{user_id}", response_model=MLStatusResponse)
+async def get_ml_status(user_id: str):
+    """Get ML model status for a user."""
+    try:
+        status = self_evolving_context.get_ml_model_status(user_id)
+        return MLStatusResponse(**status)
+    except Exception as e:
+        return MLStatusResponse(
+            ml_available=False,
+            models_trained=False,
+            training_data_count=0,
+            model_performance={"error": str(e)}
+        )
 
 @app.get("/health")
 async def health_check():

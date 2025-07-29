@@ -3,19 +3,32 @@ Semantic Drift Detection Module
 
 This module provides comprehensive drift detection capabilities for the PMT Protocol,
 monitoring system performance changes, user behavior shifts, and context relevance
-degradation over time.
+degradation over time using ML-enhanced algorithms.
 """
 
 import json
 import time
+import numpy as np
 from typing import Dict, List
 from datetime import datetime
 from redis_client import r
 
+# Machine Learning imports
+try:
+    from sklearn.ensemble import IsolationForest, RandomForestClassifier
+    from sklearn.cluster import KMeans, DBSCAN
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+    from sklearn.metrics import silhouette_score
+    from sklearn.model_selection import train_test_split
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    print("⚠️ scikit-learn not available, using statistical fallbacks")
 
 class SemanticDriftDetection:
     """
-    Detects semantic drift in the context model by monitoring:
+    Detects semantic drift in the context model using ML-enhanced algorithms:
     - Performance degradation over time
     - User behavior pattern shifts
     - Context relevance changes
@@ -34,10 +47,26 @@ class SemanticDriftDetection:
         self.behavioral_drift_enabled = True
         self.context_relevance_drift_enabled = True
         self.accuracy_drift_enabled = True
+        
+        # ML models for enhanced drift detection
+        if ML_AVAILABLE:
+            self.anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
+            self.behavior_clusterer = KMeans(n_clusters=3, random_state=42)
+            self.drift_classifier = RandomForestClassifier(n_estimators=50, random_state=42)
+            self.scaler = StandardScaler()
+            self.pca = PCA(n_components=5)
+            self.models_trained = False
+        else:
+            self.anomaly_detector = None
+            self.behavior_clusterer = None
+            self.drift_classifier = None
+            self.scaler = None
+            self.pca = None
+            self.models_trained = False
     
     def detect_semantic_drift(self, user_id: str) -> Dict:
         """
-        Comprehensive semantic drift detection for a user.
+        Comprehensive semantic drift detection using ML-enhanced algorithms.
         
         Args:
             user_id: User identifier
@@ -56,6 +85,7 @@ class SemanticDriftDetection:
             'behavioral_drift': {},
             'context_relevance_drift': {},
             'accuracy_drift': {},
+            'ml_insights': {},
             'recommendations': [],
             'trends': {},
             'alerts': []
@@ -76,6 +106,10 @@ class SemanticDriftDetection:
             drift_analysis['alerts'].append("Insufficient historical data for drift detection")
             return drift_analysis
         
+        # Train ML models if not trained
+        if ML_AVAILABLE and not self.models_trained:
+            self._train_ml_models(user_id, historical_data)
+        
         # Perform drift detection on each component
         if self.performance_monitoring_enabled:
             drift_analysis['performance_drift'] = self._detect_performance_drift(user_id, historical_data)
@@ -89,6 +123,10 @@ class SemanticDriftDetection:
         if self.accuracy_drift_enabled:
             drift_analysis['accuracy_drift'] = self._detect_accuracy_drift(user_id, historical_data)
         
+        # Add ML insights if available
+        if ML_AVAILABLE and self.models_trained:
+            drift_analysis['ml_insights'] = self._get_ml_insights(user_id, historical_data)
+        
         # Calculate overall drift score
         drift_analysis['overall_drift_score'] = self._calculate_overall_drift_score(drift_analysis)
         
@@ -99,9 +137,6 @@ class SemanticDriftDetection:
         # Generate recommendations
         drift_analysis['recommendations'] = self._generate_drift_recommendations(drift_analysis)
         
-        # Analyze trends
-        drift_analysis['trends'] = self._analyze_drift_trends(historical_data)
-        
         # Generate alerts
         drift_analysis['alerts'] = self._generate_drift_alerts(drift_analysis)
         
@@ -109,6 +144,177 @@ class SemanticDriftDetection:
         r.setex(cache_key, self.drift_cache_ttl, json.dumps(drift_analysis))
         
         return drift_analysis
+    
+    def _train_ml_models(self, user_id: str, historical_data: Dict):
+        """Train ML models for drift detection."""
+        try:
+            # Prepare training data
+            training_features = self._extract_ml_features(historical_data)
+            
+            if len(training_features) < self.min_data_points:
+                print("⚠️ Insufficient data for ML model training")
+                return
+            
+            # Scale features
+            features_scaled = self.scaler.fit_transform(training_features)
+            
+            # Train anomaly detector
+            self.anomaly_detector.fit(features_scaled)
+            
+            # Train behavior clusterer
+            self.behavior_clusterer.fit(features_scaled)
+            
+            # Prepare drift labels (simplified - would be more sophisticated in production)
+            drift_labels = self._generate_drift_labels(historical_data)
+            
+            # Train drift classifier
+            if len(set(drift_labels)) > 1:  # Need at least 2 classes
+                self.drift_classifier.fit(features_scaled, drift_labels)
+            
+            # Apply PCA for dimensionality reduction
+            self.pca.fit(features_scaled)
+            
+            self.models_trained = True
+            print(f"✅ ML models trained for drift detection (user: {user_id})")
+            
+        except Exception as e:
+            print(f"❌ ML model training failed: {e}")
+            self.models_trained = False
+    
+    def _extract_ml_features(self, historical_data: Dict) -> List[List[float]]:
+        """Extract features for ML models."""
+        features = []
+        
+        # Extract time series data
+        timestamps = historical_data.get('timestamps', [])
+        response_qualities = historical_data.get('response_qualities', [])
+        context_relevances = historical_data.get('context_relevances', [])
+        query_lengths = historical_data.get('query_lengths', [])
+        response_lengths = historical_data.get('response_lengths', [])
+        
+        for i in range(len(timestamps)):
+            if i < 1:  # Need at least 2 data points for trend calculation
+                continue
+            
+            # Calculate trend features
+            quality_trend = response_qualities[i] - response_qualities[i-1] if i > 0 else 0
+            relevance_trend = context_relevances[i] - context_relevances[i-1] if i > 0 else 0
+            
+            # Calculate volatility
+            quality_volatility = abs(quality_trend)
+            relevance_volatility = abs(relevance_trend)
+            
+            # Extract features
+            feature_vector = [
+                response_qualities[i],
+                context_relevances[i],
+                query_lengths[i] if i < len(query_lengths) else 0,
+                response_lengths[i] if i < len(response_lengths) else 0,
+                quality_trend,
+                relevance_trend,
+                quality_volatility,
+                relevance_volatility,
+                timestamps[i] if timestamps else 0,
+                i  # Time index
+            ]
+            
+            features.append(feature_vector)
+        
+        return features
+    
+    def _generate_drift_labels(self, historical_data: Dict) -> List[int]:
+        """Generate labels for drift classification."""
+        labels = []
+        
+        response_qualities = historical_data.get('response_qualities', [])
+        context_relevances = historical_data.get('context_relevances', [])
+        
+        for i in range(len(response_qualities)):
+            if i < 1:
+                labels.append(0)  # No drift
+                continue
+            
+            # Calculate drift indicators
+            quality_drift = response_qualities[i] - response_qualities[i-1]
+            relevance_drift = context_relevances[i] - context_relevances[i-1]
+            
+            # Determine drift label
+            if quality_drift < -0.1 or relevance_drift < -0.1:
+                labels.append(1)  # Drift detected
+            else:
+                labels.append(0)  # No drift
+        
+        return labels
+    
+    def _get_ml_insights(self, user_id: str, historical_data: Dict) -> Dict:
+        """Get ML-based insights for drift detection."""
+        insights = {
+            'anomaly_detection': {},
+            'behavior_clustering': {},
+            'drift_prediction': {},
+            'feature_importance': {}
+        }
+        
+        try:
+            # Extract current features
+            current_features = self._extract_ml_features(historical_data)
+            if not current_features:
+                return insights
+            
+            # Get latest features
+            latest_features = current_features[-1]
+            features_scaled = self.scaler.transform([latest_features])
+            
+            # Anomaly detection
+            anomaly_score = self.anomaly_detector.predict([latest_features])[0]
+            anomaly_confidence = self.anomaly_detector.decision_function([latest_features])[0]
+            
+            insights['anomaly_detection'] = {
+                'is_anomaly': bool(anomaly_score == -1),
+                'anomaly_confidence': float(anomaly_confidence),
+                'anomaly_score': int(anomaly_score)
+            }
+            
+            # Behavior clustering
+            cluster_label = self.behavior_clusterer.predict([latest_features])[0]
+            cluster_confidence = self.behavior_clusterer.score([latest_features])
+            
+            insights['behavior_clustering'] = {
+                'cluster_label': int(cluster_label),
+                'cluster_confidence': float(cluster_confidence),
+                'n_clusters': self.behavior_clusterer.n_clusters
+            }
+            
+            # Drift prediction
+            if hasattr(self.drift_classifier, 'predict_proba'):
+                drift_prob = self.drift_classifier.predict_proba([latest_features])[0]
+                insights['drift_prediction'] = {
+                    'drift_probability': float(drift_prob[1] if len(drift_prob) > 1 else 0),
+                    'no_drift_probability': float(drift_prob[0]),
+                    'predicted_drift': bool(self.drift_classifier.predict([latest_features])[0])
+                }
+            
+            # Feature importance (if available)
+            if hasattr(self.drift_classifier, 'feature_importances_'):
+                insights['feature_importance'] = {
+                    'importance_scores': self.drift_classifier.feature_importances_.tolist()
+                }
+            
+            # PCA insights
+            if self.pca:
+                pca_features = self.pca.transform(features_scaled)
+                explained_variance = self.pca.explained_variance_ratio_
+                
+                insights['pca_analysis'] = {
+                    'pca_features': pca_features[0].tolist(),
+                    'explained_variance': explained_variance.tolist(),
+                    'total_variance_explained': float(sum(explained_variance))
+                }
+            
+        except Exception as e:
+            print(f"⚠️ ML insights generation failed: {e}")
+        
+        return insights
     
     def _get_historical_data(self, user_id: str) -> Dict:
         """

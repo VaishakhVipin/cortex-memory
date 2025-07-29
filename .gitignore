@@ -199,9 +199,9 @@ transformers_cache/
 # =============================================================================
 
 # Self-evolving context specific files
-self_evolving_*.py
-evolving_*.py
-adaptive_*.py
+# self_evolving_*.py
+# evolving_*.py
+# adaptive_*.py
 
 # Analytics and metrics files
 analytics_*.json
