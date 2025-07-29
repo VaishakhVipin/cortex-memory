@@ -123,4 +123,72 @@ def generate_with_context(prompt: str, user_id: str) -> str:
     }
     log_gemini(prompt, response, metadata)
     
-    return response 
+    return response
+
+def generate_with_evolving_context(prompt: str, user_id: str) -> str:
+    """
+    Generate response using self-evolving context system.
+    
+    Args:
+        prompt: User prompt
+        user_id: User identifier
+        
+    Returns:
+        Generated response
+    """
+    from gemini_api import call_gemini_api
+    from core import log_gemini
+    from semantic_embeddings import semantic_embeddings
+    from self_evolving_context import self_evolving_context
+    
+    try:
+        # Get evolving context
+        similar_contexts = semantic_embeddings.find_evolving_semantic_context(
+            user_id, prompt, limit=3, similarity_threshold=0.25
+        )
+        
+        # Extract trace IDs for tracking
+        trace_ids = [context_data["embedding_id"] for context_data, _ in similar_contexts]
+        
+        # Format context
+        context = ""
+        if similar_contexts:
+            context_parts = []
+            for embedding_data, similarity in similar_contexts:
+                context_part = f"Previous conversation (relevance: {similarity:.2f}):\n"
+                context_part += f"User: {embedding_data['prompt']}\n"
+                context_part += f"Assistant: {embedding_data['response']}\n"
+                context_parts.append(context_part)
+            context = "\n".join(context_parts)
+        
+        # Build full prompt with context
+        if context:
+            full_prompt = f"{context}\nUser: {prompt}\nAssistant:"
+        else:
+            full_prompt = f"User: {prompt}\nAssistant:"
+        
+        # Call Gemini API
+        response = call_gemini_api(full_prompt)
+        
+        # Track context effectiveness (you can implement response quality measurement)
+        response_quality = 0.7  # Placeholder - implement actual quality measurement
+        self_evolving_context.track_context_effectiveness(
+            user_id, trace_ids, response_quality
+        )
+        
+        # Log the trace
+        metadata = {
+            "user_id": user_id,
+            "has_context": bool(context),
+            "context_length": len(context),
+            "context_system": "self_evolving",
+            "trace_ids": trace_ids
+        }
+        log_gemini(prompt, response, metadata)
+        
+        return response
+        
+    except Exception as e:
+        print(f"⚠️ Self-evolving context generation failed: {e}, falling back to standard context")
+        # Fallback to standard context generation
+        return generate_with_context(prompt, user_id) 

@@ -590,4 +590,28 @@ class SemanticEmbeddings:
         }
 
 # Global instance
-semantic_embeddings = SemanticEmbeddings() 
+semantic_embeddings = SemanticEmbeddings()
+
+def find_evolving_semantic_context(self, user_id: str, current_prompt: str, 
+                                 limit: int = 5, similarity_threshold: float = 0.3) -> List[Tuple[Dict, float]]:
+    """
+    Find semantically similar context using self-evolving algorithms.
+    
+    Args:
+        user_id: User identifier
+        current_prompt: Current prompt to find context for
+        limit: Maximum number of similar contexts to return
+        similarity_threshold: Minimum similarity score (0-1)
+        
+    Returns:
+        List of tuples (embedding_data, enhanced_similarity)
+    """
+    # Use self-evolving context system
+    from self_evolving_context import self_evolving_context
+    
+    return self_evolving_context.find_evolving_context(
+        user_id, current_prompt, limit, similarity_threshold
+    )
+
+# Add the method to the class
+SemanticEmbeddings.find_evolving_semantic_context = find_evolving_semantic_context 
