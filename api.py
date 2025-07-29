@@ -1,295 +1,315 @@
+#!/usr/bin/env python3
+"""
+🧠 Cortex API - Enterprise-Grade Context-Aware AI System
+RESTful API for semantic context management and self-evolving memory.
+"""
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import List, Optional, Dict
 import json
-import time
+from datetime import datetime
 
-from context_manager import generate_with_context, generate_with_evolving_context
-from self_evolving_context import self_evolving_context
 from semantic_embeddings import semantic_embeddings
+from self_evolving_context import self_evolving_context
+from semantic_drift_detection import detect_semantic_drift
+from context_manager import generate_with_context, generate_with_evolving_context
 
-app = FastAPI(title="PMT Protocol API", version="2.0.0")
+app = FastAPI(title="Cortex API", version="2.0.0")
 
-class GenerateRequest(BaseModel):
-    prompt: str
+# Request/Response Models
+class ConversationRequest(BaseModel):
     user_id: str
-    use_evolving_context: bool = False
-
-class GenerateResponse(BaseModel):
+    prompt: str
     response: str
-    context_used: List[Dict]
-    semantic_analytics: Dict
-    evolving_analytics: Optional[Dict] = None
+    metadata: Optional[Dict] = None
 
-class EvolvingAnalyticsResponse(BaseModel):
-    system_status: Dict
-    performance_summary: Dict
-    pruning_statistics: Dict
-    pattern_analysis: Dict
-    pruning_recommendations: List[Dict]
+class ContextRequest(BaseModel):
+    user_id: str
+    prompt: str
+    limit: int = 5
+    similarity_threshold: float = 0.3
+
+class GenerationRequest(BaseModel):
+    user_id: str
+    prompt: str
+    context_method: str = "semantic"  # "semantic" or "evolving"
 
 class PruningRequest(BaseModel):
     user_id: str
     threshold: Optional[float] = None
-    trace_ids: Optional[List[str]] = None
 
-class PruningResponse(BaseModel):
-    total_traces: int
-    pruned_traces: int
-    kept_traces: int
-    memory_saved_mb: float
-    pruning_reasons: Dict
-
-class PatternAnalysisResponse(BaseModel):
-    query_structures: Dict
-    topic_clusters: Dict
-    intent_patterns: Dict
-    temporal_patterns: Dict
-    semantic_patterns: Dict
-    sentiment_analysis: Dict
-    complexity_analysis: Dict
-    domain_analysis: Dict
-    behavioral_patterns: Dict
-    advanced_metrics: Dict
-
-class PredictionRequest(BaseModel):
+class AnalyticsResponse(BaseModel):
     user_id: str
-    current_query: str
+    total_memories: int
+    pruned_memories: int
+    kept_memories: int
+    avg_success_rate: float
+    avg_quality: float
+    impact_ratio: float
 
-class PredictionResponse(BaseModel):
-    likely_next_topics: List[str]
-    query_structure_prediction: str
-    intent_prediction: str
-    confidence: float
-    sentiment_prediction: str
-    complexity_prediction: float
-    domain_prediction: List[str]
-    behavioral_insights: Dict
-
-class DriftDetectionRequest(BaseModel):
+class DriftResponse(BaseModel):
     user_id: str
-    threshold: Optional[float] = None
-
-class DriftDetectionResponse(BaseModel):
-    overall_drift_score: float
     drift_detected: bool
-    drift_severity: str
-    performance_drift: Dict
-    behavioral_drift: Dict
-    context_relevance_drift: Dict
-    accuracy_drift: Dict
+    drift_score: float
+    drift_type: str
     recommendations: List[str]
-    trends: Dict
-    alerts: List[str]
 
-class DriftSummaryResponse(BaseModel):
-    user_id: str
-    drift_status: str
-    severity: str
-    overall_score: float
-    components_affected: List[str]
-    recommendations_count: int
-    alerts_count: int
-    last_updated: float
-
-# New Pydantic models for ML functionality
-class MLTrainingRequest(BaseModel):
-    user_id: str
-
-class MLTrainingResponse(BaseModel):
-    status: str
-    message: str
-    training_data_count: Optional[int] = None
-    model_performance: Optional[Dict] = None
-
-class MLStatusResponse(BaseModel):
-    ml_available: bool
-    models_trained: bool
-    training_data_count: int
-    model_performance: Dict
-
-@app.post("/generate", response_model=GenerateResponse)
-async def generate_response(request: GenerateRequest):
-    """Generate a response with semantic context."""
+# Core API Endpoints
+@app.post("/conversations", response_model=Dict)
+async def store_conversation(request: ConversationRequest):
+    """Store a conversation with semantic embeddings."""
     try:
-        response = await generate_with_context(request.prompt, request.user_id)
+        memory_id = semantic_embeddings.store_conversation_embedding(
+            user_id=request.user_id,
+            prompt=request.prompt,
+            response=request.response,
+            metadata=request.metadata or {}
+        )
         
-        # Get semantic analytics
-        analytics = semantic_embeddings.get_semantic_analytics(request.user_id)
+        return {
+            "status": "success",
+            "memory_id": memory_id,
+            "message": "Conversation stored successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/context/semantic", response_model=Dict)
+async def get_semantic_context(request: ContextRequest):
+    """Get semantically similar context."""
+    try:
+        similar_contexts = semantic_embeddings.find_semantically_similar_context(
+            user_id=request.user_id,
+            current_prompt=request.prompt,
+            limit=request.limit,
+            similarity_threshold=request.similarity_threshold
+        )
         
-        return GenerateResponse(
-            response=response,
-            context_used=[],  # TODO: Extract context used
-            semantic_analytics=analytics
+        context_data = []
+        for context, score in similar_contexts:
+            context_data.append({
+                "memory_id": context.get("embedding_id"),
+                "prompt": context.get("prompt"),
+                "response": context.get("response"),
+                "similarity_score": score,
+                "metadata": context.get("metadata", {})
+            })
+        
+        return {
+            "status": "success",
+            "contexts": context_data,
+            "total_found": len(context_data)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/context/evolving", response_model=Dict)
+async def get_evolving_context(request: ContextRequest):
+    """Get context using self-evolving algorithms."""
+    try:
+        evolving_contexts = self_evolving_context.find_evolving_context(
+            user_id=request.user_id,
+            current_prompt=request.prompt,
+            limit=request.limit,
+            similarity_threshold=request.similarity_threshold
+        )
+        
+        context_data = []
+        for context, score in evolving_contexts:
+            context_data.append({
+                "memory_id": context.get("embedding_id"),
+                "prompt": context.get("prompt"),
+                "response": context.get("response"),
+                "similarity_score": score,
+                "metadata": context.get("metadata", {})
+            })
+        
+        return {
+            "status": "success",
+            "contexts": context_data,
+            "total_found": len(context_data)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate", response_model=Dict)
+async def generate_with_context_api(request: GenerationRequest):
+    """Generate response with context awareness."""
+    try:
+        if request.context_method == "semantic":
+            response = generate_with_context(
+                user_id=request.user_id,
+                prompt=request.prompt
+            )
+        elif request.context_method == "evolving":
+            response = generate_with_evolving_context(
+                user_id=request.user_id,
+                prompt=request.prompt
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Invalid context method")
+        
+        return {
+            "status": "success",
+            "response": response,
+            "context_method": request.context_method
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Self-Evolving Context Endpoints
+@app.post("/evolving/track", response_model=Dict)
+async def track_context_effectiveness(
+    user_id: str,
+    memory_ids: List[str],
+    response_quality: float,
+    user_feedback: Optional[str] = None
+):
+    """Track context effectiveness for learning."""
+    try:
+        self_evolving_context.track_context_effectiveness(
+            user_id=user_id,
+            memory_ids=memory_ids,
+            response_quality=response_quality,
+            user_feedback=user_feedback
+        )
+        
+        return {
+            "status": "success",
+            "message": "Context effectiveness tracked successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/evolving/update-weights", response_model=Dict)
+async def update_adaptive_weights(user_id: str):
+    """Update adaptive weights for all user memories."""
+    try:
+        updated_count = self_evolving_context.update_adaptive_weights(user_id)
+        
+        return {
+            "status": "success",
+            "updated_memories": updated_count,
+            "message": "Adaptive weights updated successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Auto-Pruning Endpoints
+@app.post("/pruning/auto", response_model=Dict)
+async def auto_prune_memories(request: PruningRequest):
+    """Automatically prune low-impact memories."""
+    try:
+        pruning_stats = self_evolving_context.auto_pruning.prune_low_impact_memories(
+            user_id=request.user_id,
+            threshold=request.threshold
+        )
+        
+        return {
+            "status": "success",
+            "pruning_stats": pruning_stats,
+            "message": "Auto-pruning completed successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/pruning/manual", response_model=Dict)
+async def manual_prune_memories(user_id: str, memory_ids: List[str]):
+    """Manually prune specific memories."""
+    try:
+        pruning_stats = self_evolving_context.manual_prune_memories(user_id, memory_ids)
+        
+        return {
+            "status": "success",
+            "pruning_stats": pruning_stats,
+            "message": "Manual pruning completed successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Analytics Endpoints
+@app.get("/analytics/{user_id}", response_model=AnalyticsResponse)
+async def get_performance_analytics(user_id: str):
+    """Get comprehensive performance analytics."""
+    try:
+        metrics = self_evolving_context.get_performance_metrics(user_id)
+        
+        return AnalyticsResponse(
+            user_id=user_id,
+            total_memories=metrics["total_memories"],
+            pruned_memories=metrics.get("pruned_memories", 0),
+            kept_memories=metrics.get("kept_memories", 0),
+            avg_success_rate=metrics["avg_success_rate"],
+            avg_quality=metrics["avg_quality"],
+            impact_ratio=metrics["impact_ratio"]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/generate/evolving", response_model=GenerateResponse)
-async def generate_with_evolving_context_endpoint(request: GenerateRequest):
-    """Generate a response using the self-evolving context system."""
+@app.get("/drift/{user_id}", response_model=DriftResponse)
+async def get_drift_analysis(user_id: str, time_window_hours: int = 24):
+    """Get semantic drift analysis."""
     try:
-        response = await generate_with_evolving_context(request.prompt, request.user_id)
+        drift_results = detect_semantic_drift(
+            user_id=user_id,
+            time_window_hours=time_window_hours
+        )
         
-        # Get evolving analytics
-        evolving_analytics = self_evolving_context.get_evolving_analytics(request.user_id)
-        
-        return GenerateResponse(
-            response=response,
-            context_used=[],  # TODO: Extract context used
-            evolving_analytics=evolving_analytics
+        return DriftResponse(
+            user_id=user_id,
+            drift_detected=drift_results["drift_detected"],
+            drift_score=drift_results["drift_score"],
+            drift_type=drift_results["drift_type"],
+            recommendations=drift_results.get("recommendations", [])
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/analytics/semantic/{user_id}")
-async def get_semantic_analytics(user_id: str):
-    """Get semantic analytics for a user."""
-    try:
-        analytics = semantic_embeddings.get_semantic_analytics(user_id)
-        return analytics
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/analytics/evolving/{user_id}", response_model=EvolvingAnalyticsResponse)
-async def get_evolving_analytics(user_id: str):
-    """Get evolving analytics for a user."""
-    try:
-        analytics = self_evolving_context.get_evolving_analytics(user_id)
-        return EvolvingAnalyticsResponse(**analytics)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/pruning/auto", response_model=PruningResponse)
-async def auto_prune_traces(request: PruningRequest):
-    """Automatically prune low-impact traces."""
-    try:
-        pruning_stats = self_evolving_context.auto_pruning.prune_low_impact_traces(
-            request.user_id, request.threshold
-        )
-        return PruningResponse(**pruning_stats)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/pruning/recommendations/{user_id}")
-async def get_pruning_recommendations(user_id: str):
-    """Get pruning recommendations without actually pruning."""
-    try:
-        recommendations = self_evolving_context.get_pruning_recommendations(user_id)
-        return recommendations
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/pruning/manual")
-async def manual_prune_traces(user_id: str, trace_ids: List[str]):
-    """Manually prune specific traces."""
-    try:
-        pruning_stats = self_evolving_context.manual_prune_traces(user_id, trace_ids)
-        return pruning_stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/patterns/analyze/{user_id}", response_model=PatternAnalysisResponse)
-async def analyze_query_patterns(user_id: str):
-    """Analyze query patterns for a user."""
-    try:
-        patterns = self_evolving_context.analyze_query_patterns(user_id)
-        return PatternAnalysisResponse(**patterns)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/patterns/predict", response_model=PredictionResponse)
-async def predict_next_query_pattern(request: PredictionRequest):
-    """Predict the next likely query pattern for a user."""
-    try:
-        prediction = self_evolving_context.predict_next_query_pattern(
-            request.user_id, request.current_query
-        )
-        return PredictionResponse(**prediction)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
-
-@app.post("/drift/detect", response_model=DriftDetectionResponse)
-async def detect_semantic_drift(request: DriftDetectionRequest):
-    """Detect semantic drift for a user."""
-    try:
-        # Set custom threshold if provided
-        if request.threshold is not None:
-            self_evolving_context.set_drift_threshold(request.threshold)
-        
-        drift_analysis = self_evolving_context.detect_semantic_drift(request.user_id)
-        return DriftDetectionResponse(**drift_analysis)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Drift detection failed: {str(e)}")
-
-@app.get("/drift/summary/{user_id}", response_model=DriftSummaryResponse)
-async def get_drift_summary(user_id: str):
-    """Get a summary of drift detection results for a user."""
-    try:
-        summary = self_evolving_context.get_drift_summary(user_id)
-        return DriftSummaryResponse(**summary)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Drift summary failed: {str(e)}")
-
-@app.post("/drift/configure")
-async def configure_drift_detection(component: str, enabled: bool = True):
-    """Enable or disable drift detection components."""
-    try:
-        self_evolving_context.enable_drift_component(component, enabled)
-        return {"message": f"Drift component '{component}' {'enabled' if enabled else 'disabled'}"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Configuration failed: {str(e)}")
-
-@app.post("/ml/train", response_model=MLTrainingResponse)
-async def train_ml_models(request: MLTrainingRequest):
-    """Train ML models for a user."""
-    try:
-        result = self_evolving_context.train_ml_models(request.user_id)
-        
-        # Get additional status info
-        status = self_evolving_context.get_ml_model_status(request.user_id)
-        
-        return MLTrainingResponse(
-            status=result.get("status", "error"),
-            message=result.get("message", "Unknown error"),
-            training_data_count=status.get("training_data_count", 0),
-            model_performance=status.get("model_performance", {})
-        )
-    except Exception as e:
-        return MLTrainingResponse(
-            status="error",
-            message=f"Training failed: {str(e)}"
-        )
-
-@app.get("/ml/status/{user_id}", response_model=MLStatusResponse)
-async def get_ml_status(user_id: str):
-    """Get ML model status for a user."""
-    try:
-        status = self_evolving_context.get_ml_model_status(user_id)
-        return MLStatusResponse(**status)
-    except Exception as e:
-        return MLStatusResponse(
-            ml_available=False,
-            models_trained=False,
-            training_data_count=0,
-            model_performance={"error": str(e)}
-        )
-
+# System Health Endpoints
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "version": "2.0.0",
-        "features": {
-            "self_evolving_context": "active",
-            "auto_pruning": "active", 
-            "pattern_recognition": "active",
-            "semantic_drift_detection": "active",
-            "semantic_embeddings": "active"
-        },
-        "timestamp": time.time()
-    }
+    """System health check."""
+    try:
+        # Test Redis connection
+        from redis_client import r
+        r.ping()
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "services": {
+                "redis": "connected",
+                "semantic_embeddings": "ready",
+                "self_evolving_context": "ready"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+
+@app.get("/stats")
+async def get_system_stats():
+    """Get system-wide statistics."""
+    try:
+        from redis_client import r
+        
+        # Get basic Redis stats
+        redis_info = r.info()
+        
+        # Count total memories across all users
+        all_memories = r.keys("embedding:*")
+        
+        return {
+            "status": "success",
+            "system_stats": {
+                "total_memories": len(all_memories),
+                "redis_memory_usage": redis_info.get("used_memory_human", "N/A"),
+                "redis_connected_clients": redis_info.get("connected_clients", 0),
+                "uptime": redis_info.get("uptime_in_seconds", 0)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

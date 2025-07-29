@@ -1,43 +1,73 @@
-# core.py
-import redis
+#!/usr/bin/env python3
+"""
+🧠 Cortex Core - Central memory management system
+Handles conversation storage and retrieval with semantic understanding.
+"""
+
 import uuid
 import json
+import time
 from datetime import datetime
-from config import REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD
+from typing import Dict, Any, Optional
 
-# Redis connection
-r = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    decode_responses=True,
-    username=REDIS_USERNAME,
-    password=REDIS_PASSWORD,
-)
+from redis_client import r
+from semantic_embeddings import semantic_embeddings
 
-def log_gemini(prompt: str, gemini_response: str, metadata: dict = None):
-    trace_id = str(uuid.uuid4())
+def store_conversation(user_id: str, prompt: str, response: str, 
+                      metadata: Optional[Dict] = None) -> str:
+    """
+    Store a conversation with semantic embeddings.
+    
+    Args:
+        user_id: User identifier
+        prompt: User's prompt/question
+        response: AI's response
+        metadata: Additional metadata
+        
+    Returns:
+        memory_id: Unique identifier for the stored conversation
+    """
+    # Generate unique memory ID
+    memory_id = str(uuid.uuid4())
+    
+    # Store in Redis with TTL
+    key = f"memory:{memory_id}"
     data = {
-        "llm": "gemini-2.0-flash",
+        "user_id": user_id,
         "prompt": prompt,
-        "response": gemini_response,
+        "response": response,
         "metadata": metadata or {},
-        "timestamp": datetime.now().isoformat()
+        "created_at": datetime.now().isoformat(),
+        "memory_id": memory_id
     }
-    key = f"trace:{trace_id}"
-    r.set(key, json.dumps(data))
     
-    # Store semantic embedding if user_id is provided
-    user_id = metadata.get("user_id") if metadata else None
-    if user_id:
-        try:
-            from semantic_embeddings import semantic_embeddings
-            embedding_id = semantic_embeddings.store_conversation_embedding(
-                user_id, prompt, gemini_response, metadata
-            )
-            data["embedding_id"] = embedding_id
-            print(f"🧠 Semantic embedding stored: {embedding_id}")
-        except Exception as e:
-            print(f"⚠️ Failed to store semantic embedding: {e}")
+    # Store in Redis (30 day TTL)
+    r.setex(key, 30 * 24 * 60 * 60, json.dumps(data))
     
-    print(f"📦 Gemini trace logged: {key}")
-    return trace_id
+    # Store with semantic embeddings
+    semantic_embeddings.store_conversation_embedding(
+        user_id=user_id,
+        prompt=prompt,
+        response=response,
+        metadata=metadata or {}
+    )
+    
+    print(f"📦 Cortex memory logged: {key}")
+    return memory_id
+
+def get_conversation(memory_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve a conversation by memory ID.
+    
+    Args:
+        memory_id: Memory identifier
+        
+    Returns:
+        Conversation data or None if not found
+    """
+    key = f"memory:{memory_id}"
+    data = r.get(key)
+    
+    if data:
+        return json.loads(data)
+    return None

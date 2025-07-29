@@ -1,251 +1,280 @@
-# 🧠 PMT Protocol - The Smart Context Layer for Prompt Chains in LLMs
+# 🧠 Cortex - The Smart Context Layer for Prompt Chains in LLMs
 
 ## Overview
 
-PMT (Prompt Memory Trace) Protocol is an advanced semantic context management system that provides intelligent, persistent memory for LLM conversations. It transforms static AI interactions into context-aware, memory-enhanced experiences with **self-evolving capabilities**.
+Cortex is an advanced semantic context management system that provides intelligent, persistent memory for LLM conversations. It transforms static AI interactions into context-aware, memory-enhanced experiences.
 
-## 🚀 Key Features
+## Key Features
 
-### Base Layer: Semantic Context Provision
-- **Advanced Semantic Understanding**: Sentence-transformers for intelligent context matching
-- **Redis-Powered Storage**: Fast, persistent conversation memory with TTL
-- **Enterprise-Grade Analytics**: Comprehensive metrics and monitoring
-- **Production Ready**: Robust error handling and fallback mechanisms
+- **Semantic Context Retrieval**: Find relevant conversation history using advanced embeddings
+- **Self-Evolving Context Model**: Learns which memories matter most over time
+- **Adaptive Context Scoring**: Learns which memories matter most over time
+- **Semantic Drift Detection**: Monitors system performance and detects behavioral changes
+- **Auto-Pruning**: Removes low-impact memories to reduce memory bloat
+- **Advanced Pattern Recognition**: Sophisticated statistical algorithms for context matching
 
-### Evolution Layer: Self-Evolving Context Model
-- **Adaptive Context Scoring**: Learns which traces matter most over time
-- **Recall Success Tracking**: Measures context effectiveness automatically
-- **Dynamic Weighting**: Adjusts context importance based on performance
-- **Auto-Pruning**: Removes low-impact traces to reduce memory bloat
-- **Continuous Optimization**: Self-improving system without human intervention
+## Quick Start
 
-## 🎯 Impact Metrics
+### Prerequisites
 
-- **60% reduction** in irrelevant context injection
-- **50% fewer tokens** per conversation
-- **40% better response quality**
-- **50% lower LLM API costs**
-- **40% fewer API requests** for sustainability
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    SELF-EVOLVING LAYER                      │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │   Context       │  │   Recall        │  │   Adaptive   │ │
-│  │   Scoring       │  │   Tracking      │  │   Weighting  │ │
-│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                    SEMANTIC CONTEXT BASE                    │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │   semantic_     │  │   context_      │  │   core.py    │ │
-│  │   embeddings.py │  │   manager.py    │  │   api.py     │ │
-│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🚀 Quick Start
+- Python 3.8+
+- Redis server
+- Google Gemini API key (optional)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/VaishakhVipin/trace-pmt-protocol.git
-cd trace-pmt-protocol
+git clone https://github.com/VaishakhVipin/cortex.git
+cd cortex
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Start Redis (required)
-redis-server
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
 ### Basic Usage
 
 ```python
 from semantic_embeddings import semantic_embeddings
-from context_manager import generate_with_context
-
-# Store conversation with semantic embeddings
-user_id = "user123"
-trace_id = semantic_embeddings.store_conversation_embedding(
-    user_id, 
-    "How do I implement authentication?", 
-    "Use JWT tokens for stateless authentication..."
-)
-
-# Generate response with context
-response = generate_with_context(
-    "What's the best way to secure my API?", 
-    user_id
-)
-print(response)
-```
-
-### Self-Evolving Context Usage
-
-```python
 from self_evolving_context import self_evolving_context
 
-# Find context using self-evolving algorithms
-evolving_contexts = self_evolving_context.find_evolving_context(
-    user_id, 
-    "How do I implement OAuth2?", 
+# Store a conversation
+memory_id = semantic_embeddings.store_conversation_embedding(
+    user_id="user123",
+    prompt="How do I implement authentication?",
+    response="Use JWT tokens with proper validation...",
+    metadata={"quality": 0.9}
+)
+
+# Find relevant context
+similar_contexts = semantic_embeddings.find_semantically_similar_context(
+    user_id="user123",
+    current_prompt="What's the best way to secure my API?",
     limit=3
 )
 
-# Track context effectiveness
-self_evolving_context.track_context_effectiveness(
-    user_id, 
-    [trace_id], 
-    response_quality=0.8, 
-    user_feedback=True
+# Use evolving context for better results
+evolving_contexts = self_evolving_context.find_evolving_context(
+    user_id="user123",
+    current_prompt="What's the best way to secure my API?",
+    limit=3
 )
+
+print(f"Found {len(similar_contexts)} relevant memories")
 ```
 
 ### API Usage
 
-```bash
-# Generate response with semantic context
-curl -X POST "http://localhost:8000/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "How do I implement authentication?", "user_id": "user123"}'
+```python
+from context_manager import generate_with_context
 
-# Generate response with self-evolving context
-curl -X POST "http://localhost:8000/generate/evolving" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "How do I implement authentication?", "user_id": "user123"}'
+# Generate response with context
+response = generate_with_context(
+    user_id="user123",
+    prompt="How do I implement secure authentication?",
+    context_method="semantic"  # or "evolving"
+)
 
-# Get analytics
-curl "http://localhost:8000/analytics/user123"
+print(response)
 ```
 
-## 📊 Enterprise Features
+## Architecture
 
-### Semantic Analytics
-- **Context Relevance Scoring**: Measure how relevant injected context is
-- **Memory Consolidation**: Track which memories are most useful
-- **Precision-Recall Metrics**: Optimize search quality
-- **Hierarchical Clustering**: Organize conversations by topics
+### Core Components
 
-### Self-Evolving Capabilities
-- **Adaptive Learning**: System learns from usage patterns
-- **Performance Optimization**: Automatically improves over time
-- **Memory Management**: Intelligent pruning of low-impact traces
-- **Cost Optimization**: Reduce unnecessary context injection
+1. **Semantic Embeddings System**
+   - Generates and stores conversation embeddings
+   - Provides semantic similarity search
+   - Handles batch processing for efficiency
 
-## 🔧 Configuration
+2. **Self-Evolving Context Model**
+   - Adaptive learning system
+   - Performance tracking and optimization
+   - Auto-pruning of low-impact memories
+
+3. **Semantic Drift Detection**
+   - Monitors system performance changes
+   - Detects behavioral drift
+   - Provides analytics and insights
+
+### Data Flow
+
+```
+User Query → Semantic Search → Context Retrieval → Response Generation
+                ↓
+            Memory Storage ← Learning & Optimization ← Performance Tracking
+```
+
+## Advanced Features
+
+### Self-Evolving Context
+
+The system learns from user interactions to improve context relevance:
+
+```python
+# Track context effectiveness
+self_evolving_context.track_context_effectiveness(
+    user_id="user123",
+    memory_ids=[memory_id],
+    response_quality=0.9,
+    user_feedback="very helpful"
+)
+```
+
+### Auto-Pruning
+
+Automatically removes low-impact memories:
+
+```python
+# Prune low-impact memories
+pruning_stats = self_evolving_context.auto_pruning.prune_low_impact_memories(
+    user_id="user123",
+    threshold=0.3
+)
+
+print(f"Pruned {pruning_stats['pruned_memories']} low-impact memories")
+```
+
+### Drift Detection
+
+Monitor system performance over time:
+
+```python
+from semantic_drift_detection import detect_semantic_drift
+
+drift_results = detect_semantic_drift(
+    user_id="user123",
+    time_window_hours=24
+)
+
+print(f"Drift detected: {drift_results['drift_detected']}")
+```
+
+## Performance
+
+### Benchmarks
+
+| Method | Avg Time | Context Found | Status |
+|--------|----------|---------------|---------|
+| **Semantic** | 1.092s | 100% | ✅ **OPTIMIZED** |
+| **Evolving** | 4.492s | 100% | ✅ **WORKING** |
+| **Keyword** | 1.206s | 100% | ✅ **FAST** |
+
+### Optimization Features
+
+- **Batch Processing**: 1.4s per conversation
+- **Redis Pipelining**: Optimized data retrieval
+- **Memory Management**: Intelligent pruning of low-impact memories
+- **Statistical Algorithms**: No ML dependencies for reliability
+
+## Configuration
 
 ### Environment Variables
 
-Create a `.env` file:
+```bash
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
 
-```env
-REDIS_URL=redis://localhost:6379
-GEMINI_API_KEY=your_gemini_api_key
-OPENAI_API_KEY=your_openai_api_key
+# Gemini API (optional)
+GEMINI_API_KEY=your_api_key_here
+
+# System Configuration
+MAX_EMBEDDINGS_PER_USER=1000
+SIMILARITY_THRESHOLD=0.3
+AUTO_PRUNING_ENABLED=true
 ```
 
-### Redis Configuration
+### Advanced Configuration
 
 ```python
-# Default Redis configuration
-REDIS_CONFIG = {
-    'host': 'localhost',
-    'port': 6379,
-    'db': 0,
-    'decode_responses': True
-}
+# Custom similarity threshold
+similar_contexts = semantic_embeddings.find_semantically_similar_context(
+    user_id="user123",
+    current_prompt="Your query",
+    similarity_threshold=0.5  # Higher threshold for more precise matches
+)
+
+# Custom pruning threshold
+pruning_stats = self_evolving_context.auto_pruning.prune_low_impact_memories(
+    user_id="user123",
+    threshold=0.2  # Lower threshold for more aggressive pruning
+)
 ```
 
-## 📈 Performance
+## Testing
 
-### Benchmarks
-- **Context Retrieval**: < 50ms average response time
-- **Semantic Search**: 1000+ queries per second
-- **Memory Storage**: 10,000+ conversations per user
-- **Learning Speed**: Adapts to new patterns within hours
-
-### Scalability
-- **Horizontal Scaling**: Redis cluster support
-- **Memory Optimization**: Automatic TTL and pruning
-- **Load Balancing**: Multiple API instances
-- **Caching**: Intelligent context caching
-
-## 🧪 Testing
-
-### Run All Tests
+Run the comprehensive test suite:
 
 ```bash
-# Test semantic context provision
-python test_semantic_enhanced.py
+# Run all tests
+python test_context_benchmark.py
+python test_full_system.py
+python test_phase_2_features.py
 
-# Test self-evolving context model
-python test_self_evolving.py
-
-# Test enterprise features
-python demo_enterprise_semantic.py
+# Run specific tests
+python test_semantic_drift_detection.py
+python test_hybrid_approach.py
 ```
 
-### Performance Testing
+## API Reference
+
+### Core Functions
+
+- `semantic_embeddings.store_conversation_embedding()` - Store conversation
+- `semantic_embeddings.find_semantically_similar_context()` - Find similar context
+- `self_evolving_context.find_evolving_context()` - Find evolving context
+- `self_evolving_context.track_context_effectiveness()` - Track effectiveness
+- `semantic_drift_detection.detect_semantic_drift()` - Detect drift
+
+### Advanced Functions
+
+- `self_evolving_context.auto_pruning.prune_low_impact_memories()` - Auto-prune
+- `self_evolving_context.get_performance_metrics()` - Get metrics
+- `semantic_embeddings.store_conversations_batch()` - Batch storage
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
 
 ```bash
-# Benchmark context retrieval
-python -m pytest tests/test_performance.py
+# Clone and setup
+git clone https://github.com/VaishakhVipin/cortex.git
+cd cortex
+pip install -r requirements.txt
 
-# Load testing
-python tests/load_test.py
+# Run tests
+python -m pytest tests/
+
+# Run linting
+python -m flake8 .
 ```
 
-## 📚 Documentation
+## License
 
-- **[Implementation Guide](IMPLEMENTATION_GUIDE.md)**: Detailed implementation instructions
-- **[Self-Evolving Context](SELF_EVOLVING_CONTEXT.md)**: Self-evolving model documentation
-- **[Self-Evolving Implementation](SELF_EVOLVING_IMPLEMENTATION.md)**: Step-by-step implementation guide
-- **[Roadmap](ROADMAP.md)**: Future development plans
-- **[API Reference](api.py)**: Complete API documentation
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🎯 Use Cases
+## Support
 
-### Enterprise Applications
-- **Customer Support**: Intelligent context-aware responses
-- **Documentation**: Smart knowledge base with memory
-- **Training**: Adaptive learning systems
-- **Compliance**: Audit trail for all conversations
+- **Documentation**: [Wiki](https://github.com/VaishakhVipin/cortex/wiki)
+- **Issues**: [GitHub Issues](https://github.com/VaishakhVipin/cortex/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/VaishakhVipin/cortex/discussions)
 
-### AI Agent Integration
-- **Multi-step Reasoning**: Context-aware agent chains
-- **Domain Specialization**: Industry-specific optimization
-- **User Personalization**: Individual preference learning
-- **Cost Optimization**: Reduce redundant API calls
+## Roadmap
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-
-## 🚀 Commercialization
-
-PMT Protocol is designed for enterprise adoption with:
-- **Apache 2.0 License**: Open source with commercial rights
-- **Production Ready**: Enterprise-grade features and reliability
-- **Scalable Architecture**: Handles high-volume deployments
-- **Comprehensive Support**: Documentation and implementation guides
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/VaishakhVipin/trace-pmt-protocol/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/VaishakhVipin/trace-pmt-protocol/discussions)
-- **Documentation**: [Implementation Guide](IMPLEMENTATION_GUIDE.md)
+- [ ] Multi-modal support (images, documents)
+- [ ] Real-time learning improvements
+- [ ] Advanced analytics dashboard
+- [ ] Python and Node.js SDKs
+- [ ] Enterprise deployment tools
 
 ---
 
-**PMT Protocol: The first truly self-optimizing semantic context system for LLMs.**
+**Cortex: The first truly self-optimizing semantic context system for LLMs.**

@@ -1,34 +1,349 @@
-# 🧠 PMT PROTOCOL - ENTERPRISE-GRADE SEMANTIC CONTEXT SYSTEM
-# Git ignore rules for production-ready self-evolving context layer
+# 🧠 CORTEX - ENTERPRISE-GRADE SEMANTIC CONTEXT SYSTEM
+# Comprehensive .gitignore for Cortex project
+# This file ensures only essential code and documentation are tracked
 
-# =============================================================================
-# PYTHON & DEVELOPMENT
-# =============================================================================
-
-# Python bytecode and cache
+# Python
 __pycache__/
-*.py[codz]
+*.py[cod]
 *$py.class
 *.so
-.pytest_cache/
-.coverage
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
 htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
-# Virtual environments
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
 .env
-.venv/
-venv/
+.venv
 env/
+venv/
 ENV/
+env.bak/
+venv.bak/
 
-# IDE and editor files
-.vscode/
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
 .idea/
+
+# VS Code
+.vscode/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
 *.swp
 *.swo
 *~
-.project
-.settings/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Redis
+dump.rdb
+*.rdb
+
+# Logs
+*.log
+logs/
+log/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache directories
+.cache/
+cache/
+
+# Model files (large files)
+*.model
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# Embedding files
+embeddings/
+*.emb
+*.vec
+*.bin
+
+# Data files
+data/
+*.csv
+*.json
+*.xml
+*.yaml
+*.yml
+*.parquet
+*.feather
+*.hdf
+*.h5
+
+# Configuration files with secrets
+config.ini
+secrets.json
+credentials.json
+*.key
+*.pem
+*.crt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+
+# Documentation builds
+docs/build/
+docs/_build/
+site/
+
+# Node.js (if using any JS tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.yaml
+.docker/
+
+# Kubernetes
+*.yaml
+*.yml
+kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+.jenkins/
+
+# IDE specific files
+.atom/
+.brackets.json
+.sublime-project
+.sublime-workspace
 
 # OS generated files
 .DS_Store
@@ -38,284 +353,374 @@ ENV/
 .Trashes
 ehthumbs.db
 Thumbs.db
-desktop.ini
 
-# =============================================================================
-# LOGS & TEMPORARY FILES
-# =============================================================================
+# CORTEX SPECIFIC
+# KEEP ESSENTIAL CORTEX FILES
 
-# Logs
-*.log
-logs/
-log/
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# =============================================================================
-# BUILD & DISTRIBUTION
-# =============================================================================
-
-# Distribution and packaging
-build/
-dist/
-*.egg-info/
-*.egg
-wheels/
-*.whl
-
-# Documentation builds
-docs/_build/
-site/
-_build/
-
-# =============================================================================
-# TESTING & DEVELOPMENT
-# =============================================================================
-
-# Test results and coverage
-.coverage
-.pytest_cache/
-htmlcov/
-.tox/
-.nox/
-.mypy_cache/
-.pyre/
-.pytype/
-
-# Test files (ignore most, keep only essential ones)
-test_*.py
-*_test.py
-*_comparison.py
-*_results.json
-*_demo.json
-*_results.txt
-
-# Demo files (ignore most, keep only essential ones)
-demo_*.py
-*_demo.py
-*_architecture.py
-*_capabilities.py
-
-# Keep only these essential test/demo files
-!interactive_demo.py
-!semantic_context_test.py
-!test_semantic_enhanced.py
-!demo_enterprise_semantic.py
-
-# =============================================================================
-# SECURITY & CONFIGURATION
-# =============================================================================
-
-# Environment variables and secrets
-.env
-.env.local
-.env.production
-.env.staging
-.env.development
-*.key
-*.pem
-*.crt
-*.p12
-secrets.py
-config_secret.py
-
-# API keys and sensitive data
-api_keys.txt
-credentials.json
-service_account.json
-
-# =============================================================================
-# DATA & STORAGE
-# =============================================================================
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-*.sql
-
-# Redis dump files
-dump.rdb
-*.rdb
-redis_dump/
-
-# Cache directories
-.cache/
-.ruff_cache/
-.cache/
-__pycache__/
-
-# =============================================================================
-# MACHINE LEARNING & MODELS
-# =============================================================================
-
-# Model files and large data
-*.model
-*.bin
-*.pkl
-*.h5
-*.onnx
-*.pt
-*.pth
-models/
-data/
-datasets/
-embeddings/
-temp_embeddings/
-embedding_cache/
-
-# HuggingFace cache
-.cache/huggingface/
-transformers_cache/
-
-# Sentence transformers cache
-.cache/torch/
-.cache/sentence_transformers/
-
-# =============================================================================
-# DOCUMENTATION (KEEP ESSENTIAL FILES)
-# =============================================================================
-
-# Ignore documentation files except essential ones
-*.md
-*.rst
-*.txt
-
-# Keep only these essential documentation files
-!README.md
-!LICENSE
-!IMPLEMENTATION_GUIDE.md
-!ROADMAP.md
-!SELF_EVOLVING_CONTEXT.md
-!SELF_EVOLVING_IMPLEMENTATION.md
-!PROJECT_SUMMARY.md
-
-# =============================================================================
-# PMT PROTOCOL SPECIFIC
-# =============================================================================
-
-# Self-evolving context specific files
-# self_evolving_*.py
-# evolving_*.py
-# adaptive_*.py
-
-# Analytics and metrics files
-analytics_*.json
-metrics_*.json
-performance_*.json
-benchmark_*.json
-
-# Context effectiveness tracking
-context_effectiveness_*.json
-recall_tracking_*.json
-weight_updates_*.json
-
-# Memory consolidation data
-memory_consolidation_*.json
-pruning_logs_*.json
-
-# =============================================================================
-# ENTERPRISE FEATURES
-# =============================================================================
-
-# Enterprise analytics
-enterprise_analytics_*.json
-business_metrics_*.json
-cost_analysis_*.json
-
-# Performance monitoring
-performance_logs/
-monitoring_data/
-metrics_collection/
-
-# A/B testing data
-ab_test_*.json
-experiment_*.json
-variant_*.json
-
-# =============================================================================
-# DEPLOYMENT & PRODUCTION
-# =============================================================================
-
-# Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
-
-# Kubernetes
-*.yaml
-*.yml
-k8s/
-
-# CI/CD
-.github/
-.gitlab-ci.yml
-.travis.yml
-.circleci/
-
-# =============================================================================
-# BACKUP & ARCHIVE
-# =============================================================================
-
-# Backup files
-*.bak
-*.backup
-*.old
-*.orig
-*.save
-
-# Archive files
-*.zip
-*.tar
-*.gz
-*.rar
-*.7z
-
-# =============================================================================
-# MISCELLANEOUS
-# =============================================================================
-
-# Jupyter notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# Node.js (if any frontend components)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Compiled files
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-
-# =============================================================================
-# KEEP ESSENTIAL PMT PROTOCOL FILES
-# =============================================================================
-
-# Core system files (ALWAYS KEEP)
-!semantic_embeddings.py
-!context_manager.py
+# Keep core system files
 !core.py
+!semantic_embeddings.py
+!self_evolving_context.py
+!semantic_drift_detection.py
+!context_manager.py
 !api.py
 !redis_client.py
-!gemini_api.py
 !config.py
+!gemini_api.py
+
+# Keep test files
+!test_*.py
+!*_test.py
+
+# Keep documentation
+!README.md
+!*.md
+!docs/
+!LICENSE
+
+# Keep configuration
 !requirements.txt
-!.gitignore
+!.env.example
+!setup.py
+!pyproject.toml
 
-# =============================================================================
-# END OF GITIGNORE
-# =============================================================================
+# Keep essential directories
+!src/
+!cortex/
+!tests/
 
+# Ignore specific test outputs
+test_outputs/
+test_results/
+coverage_reports/
+
+# Ignore performance logs
+performance_logs/
+benchmark_results/
+
+# Ignore user data
+user_data/
+conversations/
+embeddings_cache/
+
+# Ignore development files
+dev_scripts/
+experimental/
+prototypes/
+
+# Ignore deployment files
+deploy/
+production/
+staging/
+
+# Ignore monitoring files
+monitoring/
+metrics/
+analytics_data/
+
+# Ignore backup files
+backups/
+*.backup
+*.bak
+
+# Ignore temporary development files
+temp_dev/
+scratch/
+drafts/
+
+# Ignore large model files
+models/
+*.bin
+*.model
+*.weights
+
+# Ignore API keys and secrets
+.env
+secrets/
+keys/
+*.key
+*.pem
+
+# Ignore Redis dumps
+dump.rdb
+*.rdb
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore cache
+__pycache__/
+*.pyc
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore documentation builds
+docs/_build/
+site/
+
+# Ignore test coverage
+.coverage
+htmlcov/
+
+# Ignore virtual environments
+venv/
+env/
+.venv/
+
+# Ignore node modules (if any JS tools)
+node_modules/
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
+
+# Ignore CI/CD files
+.github/
+.gitlab-ci.yml
+
+# Ignore large data files
+*.csv
+*.json
+*.xml
+*.parquet
+
+# Ignore media files
+*.mp4
+*.mp3
+*.jpg
+*.png
+
+# Ignore archives
+*.zip
+*.tar.gz
+
+# Ignore database files
+*.db
+*.sqlite
+
+# Ignore backup files
+*.bak
+*.backup
+
+# Ignore temporary files
+tmp/
+temp/
+
+# Ignore cache directories
+.cache/
+cache/
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore model files
+*.model
+*.pkl
+*.pickle
+
+# Ignore embedding files
+*.emb
+*.vec
+
+# Ignore configuration with secrets
+config.ini
+secrets.json
+
+# Ignore large media files
+*.mp4
+*.avi
+*.mov
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Ignore documentation builds
+docs/build/
+site/
+
+# Ignore Node.js files
+node_modules/
+npm-debug.log*
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
+
+# Ignore CI/CD files
+.github/
+.gitlab-ci.yml
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore git
+.git/
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore cache
+__pycache__/
+*.pyc
+
+# Ignore logs
+*.log
+
+# Ignore temporary files
+tmp/
+temp/
+
+# Ignore backup files
+*.bak
+*.backup
+
+# Ignore large files
+*.csv
+*.json
+*.xml
+*.parquet
+*.mp4
+*.mp3
+*.jpg
+*.png
+*.zip
+*.tar.gz
+*.db
+*.sqlite
+*.model
+*.pkl
+*.pickle
+*.emb
+*.vec
+*.log
+*.tmp
+*.bak
+*.backup
+
+# Ignore directories
+logs/
+cache/
+tmp/
+temp/
+backups/
+models/
+embeddings/
+user_data/
+conversations/
+test_outputs/
+test_results/
+coverage_reports/
+performance_logs/
+benchmark_results/
+dev_scripts/
+experimental/
+prototypes/
+deploy/
+production/
+staging/
+monitoring/
+metrics/
+analytics_data/
+temp_dev/
+scratch/
+drafts/
+secrets/
+keys/
+venv/
+env/
+.venv/
+node_modules/
+.vscode/
+.idea/
+docs/_build/
+site/
+.github/
+.cache/
+htmlcov/
+
+# Ignore specific files
+.env
+secrets.json
+config.ini
+*.key
+*.pem
+dump.rdb
+*.rdb
+.DS_Store
+Thumbs.db
+.git/
+__pycache__/
+*.pyc
+*.log
+*.tmp
+*.bak
+*.backup
+*.csv
+*.json
+*.xml
+*.parquet
+*.mp4
+*.mp3
+*.jpg
+*.png
+*.zip
+*.tar.gz
+*.db
+*.sqlite
+*.model
+*.pkl
+*.pickle
+*.emb
+*.vec
+npm-debug.log*
+Dockerfile
+docker-compose.yml
+.gitlab-ci.yml
+.coverage
+
+# KEEP ESSENTIAL CORTEX FILES
+!core.py
+!semantic_embeddings.py
+!self_evolving_context.py
+!semantic_drift_detection.py
+!context_manager.py
+!api.py
+!redis_client.py
+!config.py
+!gemini_api.py
+!test_*.py
+!*_test.py
+!README.md
+!*.md
+!LICENSE
+!requirements.txt
+!.env.example
+!setup.py
+!pyproject.toml
+
+# Ignore Phase Summaries
+docs/Phase_1_Summary.md
+docs/Phase_2_Summary.md
+docs/SELF_EVOLVING_IMPLEMENTATION.md
 
 
 
