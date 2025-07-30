@@ -14,11 +14,11 @@ from datetime import datetime
 # Add parent directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from cortex.redis_client import r
-from cortex.gemini_api import call_gemini_api
-from cortex.semantic_embeddings import semantic_embeddings
-from cortex.self_evolving_context import self_evolving_context
-from cortex.context_manager import generate_with_context, generate_with_evolving_context
+from cortex_memory.redis_client import r
+from cortex_memory.llm_providers import call_gemini_api
+from cortex_memory.semantic_embeddings import semantic_embeddings
+from cortex_memory.self_evolving_context import self_evolving_context
+from cortex_memory.context_manager import generate_with_context, generate_with_evolving_context
 import re
 
 def clear_redis():
