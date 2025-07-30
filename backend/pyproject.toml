@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cortex-memory-sdk"
-version = "2.0.0"
-description = "🧠 The Smart Context Layer for Prompt Chains in LLMs - Enterprise-grade context-aware AI system with semantic understanding and self-evolving memory"
+version = "2.0.3"
+description = "🧠 The Smart Context Layer for Prompt Chains in LLMs - Enterprise-grade context-aware AI system with semantic understanding and self-evolving memory. Built by Vaishakh Vipin (https://github.com/VaishakhVipin) - Advanced context management for LLMs with Redis-backed semantic search, self-evolving patterns, and multi-provider support (Gemini, Claude, OpenAI)."
 readme = "README.md"
 license = "MIT"
 authors = [
     {name = "Cortex Team", email = "obeliskacquisitions@gmail.com"}
 ]
 maintainers = [
-    {name = "Cortex Team", email = "vaishakh.vipin@gmail.com"}
+    {name = "Cortex Team", email = "vaishakh.obelisk@gmail.com"}
 ]
 keywords = [
     "ai", "memory", "context", "semantic", "embeddings", "llm", "prompt-chains",
