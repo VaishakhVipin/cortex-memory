@@ -1,0 +1,446 @@
+# 🧠 CORTEX MEMORY - ENTERPRISE-GRADE SEMANTIC CONTEXT SYSTEM
+# Comprehensive .gitignore for Cortex Memory project
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pypirc
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# =============================================================================
+# IDEs AND EDITORS
+# =============================================================================
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+.brackets.json
+
+# =============================================================================
+# OPERATING SYSTEMS
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# CORTEX MEMORY SPECIFIC
+# =============================================================================
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.*
+!.env.example
+
+# API Keys and secrets
+config.py
+secrets.json
+*.key
+*.pem
+*.crt
+
+# Security files
+auth/security.py
+
+# Redis
+dump.rdb
+*.rdb
+
+# Logs
+*.log
+logs/
+log/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache directories
+.cache/
+cache/
+
+# Model files (large files)
+*.model
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# Embedding files
+embeddings/
+*.emb
+*.vec
+*.bin
+
+# Data files
+data/
+*.csv
+*.json
+*.xml
+*.yaml
+*.yml
+*.parquet
+*.feather
+*.hdf
+*.h5
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.old
+backups/
+
+# Archive files
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+
+# Documentation builds
+docs/build/
+docs/_build/
+site/
+
+# Test outputs
+test_outputs/
+test_results/
+coverage_reports/
+
+# Performance logs
+performance_logs/
+benchmark_results/
+
+# User data
+user_data/
+conversations/
+embeddings_cache/
+
+# Development files
+dev_scripts/
+experimental/
+prototypes/
+temp_dev/
+scratch/
+drafts/
+
+# Deployment files
+deploy/
+production/
+staging/
+
+# Monitoring files
+monitoring/
+metrics/
+analytics_data/
+
+# =============================================================================
+# FRONTEND (if any)
+# =============================================================================
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+yarn.lock
+
+# =============================================================================
+# DOCKER AND DEPLOYMENT
+# =============================================================================
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.yaml
+.docker/
+
+# Kubernetes
+*.yaml
+*.yml
+kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+.jenkins/
+
+# =============================================================================
+# KEEP ESSENTIAL FILES
+# =============================================================================
+# Keep core system files
+!core.py
+!semantic_embeddings.py
+!self_evolving_context.py
+!semantic_drift_detection.py
+!context_manager.py
+!api.py
+!redis_client.py
+!config.py
+!gemini_api.py
+
+# Keep test files
+!test_*.py
+!*_test.py
+
+# Keep documentation
+!README.md
+!*.md
+!docs/
+!LICENSE
+
+# Keep configuration
+!requirements.txt
+!.env.example
+!setup.py
+!pyproject.toml
+
+# Keep essential directories
+!src/
+!cortex/
+!tests/
+
+
+
+
+
+
